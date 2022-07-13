@@ -595,6 +595,24 @@ impl<T: Read + Seek> Reader<T> {
 }
 
 impl Reader<BufReader<File>> {
+    fn _from_path<P: AsRef<Path>>(path: P, label: Option<&str>) -> Result<Self, Error> {
+        let shape_path = path.as_ref().to_path_buf();
+        let dbf_path = shape_path.with_extension("dbf");
+        let label = label.unwrap_or("utf-8");
+
+        if dbf_path.exists() {
+            let shape_reader = ShapeReader::from_path(path)?;
+            let dbf_source = BufReader::new(File::open(dbf_path)?);
+            let dbf_reader = dbase::Reader::new_with_label(dbf_source, label)?;
+            Ok(Self {
+                shape_reader,
+                dbase_reader: dbf_reader,
+            })
+        } else {
+            return Err(Error::MissingDbf);
+        }
+    }
+
     /// Creates a reader from a path the .shp file
     ///
     /// Will attempt to read both the `.shx` and `.dbf` associated with the file,
@@ -627,20 +645,17 @@ impl Reader<BufReader<File>> {
     /// # }
     /// ```
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        let shape_path = path.as_ref().to_path_buf();
-        let dbf_path = shape_path.with_extension("dbf");
+        Self::_from_path(path, None)
+    }
 
-        if dbf_path.exists() {
-            let shape_reader = ShapeReader::from_path(path)?;
-            let dbf_source = BufReader::new(File::open(dbf_path)?);
-            let dbf_reader = dbase::Reader::new(dbf_source)?;
-            Ok(Self {
-                shape_reader,
-                dbase_reader: dbf_reader,
-            })
-        } else {
-            return Err(Error::MissingDbf);
-        }
+    /// specify a encoding label.
+    ///
+    /// ```
+    /// let mut reader = shapefile::Reader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis");
+    /// assert!(reader.is_ok());
+    /// ```
+    pub fn from_path_with_label<P: AsRef<Path>>(path: P, label: &str) -> Result<Self, Error> {
+        Self::_from_path(path, Some(label))
     }
 }
 
@@ -648,10 +663,24 @@ pub fn read<T: AsRef<Path>>(path: T) -> Result<Vec<(Shape, dbase::Record)>, Erro
     read_as::<T, Shape, dbase::Record>(path)
 }
 
+pub fn read_with_label<T: AsRef<Path>>(
+    path: T,
+    label: &str,
+) -> Result<Vec<(Shape, dbase::Record)>, Error> {
+    read_as_with_label::<T, Shape, dbase::Record>(path, label)
+}
+
 pub fn read_as<T: AsRef<Path>, S: ReadableShape, R: dbase::ReadableRecord>(
     path: T,
 ) -> Result<Vec<(S, R)>, Error> {
     Reader::from_path(path).and_then(|mut rdr| rdr.read_as::<S, R>())
+}
+
+pub fn read_as_with_label<T: AsRef<Path>, S: ReadableShape, R: dbase::ReadableRecord>(
+    path: T,
+    label: &str,
+) -> Result<Vec<(S, R)>, Error> {
+    Reader::from_path_with_label(path, label).and_then(|mut rdr| rdr.read_as::<S, R>())
 }
 
 /// Function to read all the Shapes in a file as a certain type
@@ -698,4 +727,35 @@ pub fn read_shapes<T: AsRef<Path>>(path: T) -> Result<Vec<Shape>, Error> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+    use dbase::FieldValue;
+
+    #[test]
+    fn from_path_with_label() {
+        let mut reader =
+            Reader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis").unwrap();
+        let mut records = HashMap::new();
+        for (index, result) in reader.iter_shapes_and_records().enumerate() {
+            let (_, record) = result.unwrap();
+            let data = record.get("text").unwrap().clone();
+            records.insert(index, data);
+        }
+        // check
+        assert_eq!(
+            *records.get(&0).unwrap(),
+            FieldValue::Character(Some("Thease are only alphabet charcters.".to_string()))
+        );
+        assert_eq!(
+            *records.get(&1).unwrap(),
+            FieldValue::Character(Some("Rustは、難しいけど楽しい。".to_string()))
+        );
+        assert_eq!(
+            *records.get(&2).unwrap(),
+            FieldValue::Character(Some("吾輩は猫である。名前はまだ無い。".to_string()))
+        );
+        assert_eq!(*records.get(&3).unwrap(), FieldValue::Character(None));
+    }
+}
