@@ -297,14 +297,19 @@ impl<T: Write + Seek> Writer<T> {
     pub fn write_shape_and_record<S: EsriShape, R: dbase::WritableRecord>(
         &mut self,
         shape: &S,
-        record: &R) -> Result<(), Error> {
+        record: &R,
+    ) -> Result<(), Error> {
         self.shape_writer.write_shape(shape)?;
         self.dbase_writer.write_record(record)?;
         Ok(())
     }
 
-
-    pub fn write_shapes_and_records<'a, S: EsriShape +'a , R: dbase::WritableRecord +'a, C: IntoIterator<Item=(&'a S, &'a R)>>(
+    pub fn write_shapes_and_records<
+        'a,
+        S: EsriShape + 'a,
+        R: dbase::WritableRecord + 'a,
+        C: IntoIterator<Item = (&'a S, &'a R)>,
+    >(
         mut self,
         container: C,
     ) -> Result<(), Error> {
