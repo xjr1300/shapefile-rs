@@ -5,7 +5,8 @@ use std::collections::HashMap;
 
 use dbase::FieldValue;
 
-use shapefile::Reader;
+use shapefile::Reader as ShapeFileReader;
+use shapefile::Writer as ShapeFileWriter;
 
 fn character_value(value: Option<&FieldValue>) -> Option<String> {
     match value {
@@ -22,7 +23,8 @@ fn character_value(value: Option<&FieldValue>) -> Option<String> {
 
 #[test]
 fn shift_jis_from_path_with_label() {
-    let mut reader = Reader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis").unwrap();
+    let mut reader =
+        ShapeFileReader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis").unwrap();
     let mut records = HashMap::new();
     for (index, result) in reader.iter_shapes_and_records().enumerate() {
         let (_, record) = result.unwrap();
@@ -46,3 +48,27 @@ fn shift_jis_from_path_with_label() {
         assert_eq!(record.1.as_deref(), expected.1);
     }
 }
+
+/// Writer::new(ShapeWriter<T>, dbase::TableWriter<T>)
+///     TableWriterがエンコード情報を持っている
+/// Writer::from_path(P: AsRef<Path>, TableWrierBuilder)
+///     new_with_labelメソッドで構築することで、TableWriterBuilderが管理するエンコードを指定できる
+/// Writer::from_path_with_info(P: AsRef<Path>, TableInfo)
+///     TableInfoにはエンコード情報を持っていない。
+///     TODO: エンコードを指定する類似メソッドを追加する。
+
+#[test]
+fn shift_jis_from_path_with_info_and_label() {
+    let reader =
+        ShapeFileReader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis").unwrap();
+    let table_info = reader.into_table_info();
+    let writer = ShapeFileWriter::from_path_with_info_and_label(
+        "tests/data/temp.shp",
+        table_info,
+        "shift_jis",
+    );
+    assert!(writer.is_ok());
+}
+
+#[test]
+fn shift_jis_writer() {}
