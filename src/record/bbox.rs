@@ -57,6 +57,7 @@ impl<PointType> GenericBBox<PointType> {
         }
     }
 
+    #[allow(clippy::ptr_arg)]
     pub(crate) fn from_parts(parts: &Vec<Vec<PointType>>) -> Self
     where
         PointType: ShrinkablePoint + GrowablePoint + Copy,

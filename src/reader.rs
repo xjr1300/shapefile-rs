@@ -609,7 +609,7 @@ impl Reader<BufReader<File>> {
                 dbase_reader: dbf_reader,
             })
         } else {
-            return Err(Error::MissingDbf);
+            Err(Error::MissingDbf)
         }
     }
 
@@ -724,38 +724,4 @@ pub fn read_shapes_as<T: AsRef<Path>, S: ReadableShape>(path: T) -> Result<Vec<S
 /// ```
 pub fn read_shapes<T: AsRef<Path>>(path: T) -> Result<Vec<Shape>, Error> {
     read_shapes_as::<T, Shape>(path)
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use super::*;
-    use dbase::FieldValue;
-
-    #[test]
-    fn from_path_with_label() {
-        let mut reader =
-            Reader::from_path_with_label("tests/data/shift_jis.shp", "shift_jis").unwrap();
-        let mut records = HashMap::new();
-        for (index, result) in reader.iter_shapes_and_records().enumerate() {
-            let (_, record) = result.unwrap();
-            let data = record.get("text").unwrap().clone();
-            records.insert(index, data);
-        }
-        // check
-        assert_eq!(
-            *records.get(&0).unwrap(),
-            FieldValue::Character(Some("Thease are only alphabet charcters.".to_string()))
-        );
-        assert_eq!(
-            *records.get(&1).unwrap(),
-            FieldValue::Character(Some("Rustは、難しいけど楽しい。".to_string()))
-        );
-        assert_eq!(
-            *records.get(&2).unwrap(),
-            FieldValue::Character(Some("吾輩は猫である。名前はまだ無い。".to_string()))
-        );
-        assert_eq!(*records.get(&3).unwrap(), FieldValue::Character(None));
-    }
 }

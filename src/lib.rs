@@ -161,7 +161,7 @@ pub enum ShapeType {
 impl ShapeType {
     pub(crate) fn read_from<T: Read>(source: &mut T) -> Result<ShapeType, Error> {
         let code = source.read_i32::<LittleEndian>()?;
-        Self::from(code).ok_or_else(|| Error::InvalidShapeType(code))
+        Self::from(code).ok_or(Error::InvalidShapeType(code))
     }
 
     pub(crate) fn write_to<T: Write>(self, dest: &mut T) -> Result<(), std::io::Error> {
@@ -199,42 +199,42 @@ impl ShapeType {
 
     /// Returns whether the ShapeType has the third dimension Z
     pub fn has_z(self) -> bool {
-        match self {
+        matches!(
+            self,
             ShapeType::PointZ
-            | ShapeType::PolylineZ
-            | ShapeType::PolygonZ
-            | ShapeType::MultipointZ
-            | ShapeType::Multipatch => true,
-            _ => false,
-        }
+                | ShapeType::PolylineZ
+                | ShapeType::PolygonZ
+                | ShapeType::MultipointZ
+                | ShapeType::Multipatch
+        )
     }
 
     /// Returns whether the ShapeType has the optional measure dimension
     pub fn has_m(self) -> bool {
-        match self {
+        matches!(
+            self,
             ShapeType::PointZ
-            | ShapeType::PolylineZ
-            | ShapeType::PolygonZ
-            | ShapeType::MultipointZ
-            | ShapeType::PointM
-            | ShapeType::PolylineM
-            | ShapeType::PolygonM
-            | ShapeType::MultipointM => true,
-            _ => false,
-        }
+                | ShapeType::PolylineZ
+                | ShapeType::PolygonZ
+                | ShapeType::MultipointZ
+                | ShapeType::PointM
+                | ShapeType::PolylineM
+                | ShapeType::PolygonM
+                | ShapeType::MultipointM
+        )
     }
 
     /// Returns true if the shape may have multiple parts
     pub fn is_multipart(self) -> bool {
-        match self {
+        !matches!(
+            self,
             ShapeType::Point
-            | ShapeType::PointM
-            | ShapeType::PointZ
-            | ShapeType::Multipoint
-            | ShapeType::MultipointM
-            | ShapeType::MultipointZ => false,
-            _ => true,
-        }
+                | ShapeType::PointM
+                | ShapeType::PointZ
+                | ShapeType::Multipoint
+                | ShapeType::MultipointM
+                | ShapeType::MultipointZ
+        )
     }
 }
 
