@@ -13,7 +13,7 @@ exclude = ["tests/data/*"]
 #edition = "2018"
 [dependencies]
 byteorder = "1.2.7"
-dbase = { git = "https://github.com/xjr1300/dbase-rs.git", branch = "master" }
+dbase = { git = "https://github.com/xjr1300/dbase-rs.git", rev = "7f31ac1a248db437d3e166a8ed0decd9fa677789" }
 geo-types = { version = ">=0.4.0, <0.8.0", optional = true }
 
 [package.metadata.docs.rs]
