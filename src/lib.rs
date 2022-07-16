@@ -161,7 +161,7 @@ pub enum ShapeType {
 impl ShapeType {
     pub(crate) fn read_from<T: Read>(source: &mut T) -> Result<ShapeType, Error> {
         let code = source.read_i32::<LittleEndian>()?;
-        Self::from(code).ok_or_else(|| Error::InvalidShapeType(code))
+        Self::from(code).ok_or(Error::InvalidShapeType(code))
     }
 
     pub(crate) fn write_to<T: Write>(self, dest: &mut T) -> Result<(), std::io::Error> {

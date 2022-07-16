@@ -88,6 +88,7 @@ impl<PointType> PolygonRing<PointType> {
     /// assert_eq!(ring.len(), 5);
     /// ```
     #[inline]
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.points().len()
     }
@@ -108,8 +109,8 @@ impl<PointType> PolygonRing<PointType> {
     #[inline]
     pub fn points(&self) -> &[PointType] {
         match self {
-            PolygonRing::Outer(points) => &points,
-            PolygonRing::Inner(points) => &points,
+            PolygonRing::Outer(points) => points,
+            PolygonRing::Inner(points) => points,
         }
     }
 
@@ -152,7 +153,7 @@ where
 
     fn correctly_order_points(&mut self) {
         let points = self.points_vec_mut();
-        let actual_ring_type = super::ring_type_from_points_ordering(&points);
+        let actual_ring_type = super::ring_type_from_points_ordering(points);
         match (self, actual_ring_type) {
             (PolygonRing::Outer(points), RingType::InnerRing)
             | (PolygonRing::Inner(points), RingType::OuterRing) => {
@@ -397,7 +398,7 @@ impl ConcreteReadableShape for Polygon {
 
 impl WritableShape for Polygon {
     fn size_in_bytes(&self) -> usize {
-        let mut size = 0 as usize;
+        let mut size = 0_usize;
         size += size_of::<f64>() * 4;
         size += size_of::<i32>(); // num parts
         size += size_of::<i32>(); //num points
@@ -452,7 +453,7 @@ impl ConcreteReadableShape for PolygonM {
 
 impl WritableShape for PolygonM {
     fn size_in_bytes(&self) -> usize {
-        let mut size = 0 as usize;
+        let mut size = 0_usize;
         size += size_of::<f64>() * 4;
         size += size_of::<i32>(); // num parts
         size += size_of::<i32>(); //num points
@@ -512,7 +513,7 @@ impl ConcreteReadableShape for PolygonZ {
 
 impl WritableShape for PolygonZ {
     fn size_in_bytes(&self) -> usize {
-        let mut size = 0 as usize;
+        let mut size = 0_usize;
         size += size_of::<f64>() * 4;
         size += size_of::<i32>(); // num parts
         size += size_of::<i32>(); //num points

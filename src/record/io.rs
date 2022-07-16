@@ -92,6 +92,7 @@ pub(crate) fn read_ms_into<T: Read, D: HasMutM>(
     Ok(())
 }
 
+#[allow(clippy::ptr_arg)]
 pub(crate) fn read_zs_into<T: Read>(
     source: &mut T,
     points: &mut Vec<PointZ>,
@@ -294,7 +295,7 @@ where
     PointType: HasXY,
 {
     pub(crate) fn write_bbox_xy(self) -> std::io::Result<Self> {
-        bbox_write_xy_to(&self.bbox, self.dst)?;
+        bbox_write_xy_to(self.bbox, self.dst)?;
         Ok(self)
     }
 
@@ -313,7 +314,7 @@ where
     PointType: HasM,
 {
     pub(crate) fn write_bbox_m_range(self) -> std::io::Result<Self> {
-        bbox_write_m_range_to(&self.bbox, self.dst)?;
+        bbox_write_m_range_to(self.bbox, self.dst)?;
         Ok(self)
     }
 
@@ -331,7 +332,7 @@ where
     W: Write,
 {
     pub(crate) fn write_bbox_z_range(self) -> std::io::Result<Self> {
-        bbox_write_z_range_to(&self.bbox, self.dst)?;
+        bbox_write_z_range_to(self.bbox, self.dst)?;
         Ok(self)
     }
 
