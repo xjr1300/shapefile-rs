@@ -356,4 +356,16 @@ impl Writer<BufWriter<File>> {
                 .build_with_file_dest(path.as_ref().with_extension("dbf"))?,
         })
     }
+
+    pub fn from_path_with_info_and_label<P: AsRef<Path>>(
+        path: P,
+        table_info: dbase::TableInfo,
+        label: &str,
+    ) -> Result<Self, Error> {
+        Ok(Self {
+            shape_writer: ShapeWriter::from_path(path.as_ref())?,
+            dbase_writer: dbase::TableWriterBuilder::from_table_info_with_label(table_info, label)?
+                .build_with_file_dest(path.as_ref().with_extension("dbf"))?,
+        })
+    }
 }
